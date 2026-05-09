@@ -1,0 +1,12 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PORT: ${PORT:?PORT is required in apps/example-nest-api/.env}
+    env_file:
+      - apps/example-nest-api/.env
+    ports:
+      - '${PORT:?PORT is required in apps/example-nest-api/.env}:${PORT:?PORT is required in apps/example-nest-api/.env}'
+    restart: unless-stopped

@@ -1,0 +1,45 @@
+{
+  "name": "isubscribe-entitlements-monorepo",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Monorepo for @isubscribe/entitlements npm package and example apps",
+  "engines": {
+    "node": ">=20"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @isubscribe/entitlements && npm run build -w example-nest-api && npm run build -w example-react",
+    "build:pkg": "npm run build -w @isubscribe/entitlements",
+    "typecheck": "npm run build -w @isubscribe/entitlements && npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "test:coverage": "npm run test:coverage --workspaces --if-present",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "start:dev:nest": "npm run build -w @isubscribe/entitlements && npm run start:dev -w example-nest-api",
+    "start:dev:react": "npm run build -w @isubscribe/entitlements && npm run start:dev -w example-react",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,mts,cts}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{js,mjs,cjs,json,md,yml,yaml}": "prettier --write"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.18.0",
+    "@types/node": "^22.10.5",
+    "eslint": "^9.18.0",
+    "eslint-config-prettier": "^10.0.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.4.1",
+    "prettier": "^3.4.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.20.0"
+  }
+}

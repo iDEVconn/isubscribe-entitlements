@@ -1,0 +1,8 @@
+dist
+node_modules
+coverage
+package-lock.json
+
+# Synced from repo root by packages/entitlements/scripts/sync-docs.mjs at publish time
+packages/entitlements/README.md
+packages/entitlements/ARCHITECTURE.md

@@ -1,0 +1,14 @@
+node_modules
+dist
+coverage
+.env
+*.tsbuildinfo
+npm-debug.log*
+yarn-error.log
+.idea
+.vscode
+.DS_Store
+
+# Synced from repo root by packages/entitlements/scripts/sync-docs.mjs at publish time
+packages/entitlements/README.md
+packages/entitlements/ARCHITECTURE.md

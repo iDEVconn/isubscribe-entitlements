@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "module": "node16",
+    "moduleResolution": "node16",
+    "target": "es2023",
+    "lib": ["es2023", "dom"],
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "exactOptionalPropertyTypes": true,
+    "skipLibCheck": true,
+    "removeComments": true,
+    "sourceMap": true,
+    "incremental": true,
+    "declaration": false,
+    "jsx": "react-jsx",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  },
+  "exclude": ["**/node_modules", "**/dist"]
+}

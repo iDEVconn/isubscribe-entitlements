@@ -1,0 +1,186 @@
+{
+  "name": "@isubscribe/entitlements",
+  "version": "0.1.0",
+  "description": "Runtime entitlements engine for iSubscribe: turn purchased plans into runtime feature access via a framework-agnostic core, React provider/hooks, and NestJS guards/decorators. CASL is hidden behind a business-oriented API.",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "isubscribe",
+    "entitlements",
+    "subscriptions",
+    "feature-flags",
+    "billing",
+    "casl",
+    "authorization",
+    "saas",
+    "nestjs",
+    "react"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./react": {
+      "import": {
+        "types": "./dist/react/index.d.mts",
+        "default": "./dist/react/index.mjs"
+      },
+      "require": {
+        "types": "./dist/react/index.d.ts",
+        "default": "./dist/react/index.js"
+      }
+    },
+    "./nest": {
+      "import": {
+        "types": "./dist/nest/index.d.mts",
+        "default": "./dist/nest/index.mjs"
+      },
+      "require": {
+        "types": "./dist/nest/index.d.ts",
+        "default": "./dist/nest/index.js"
+      }
+    },
+    "./adapters/persistence/memory": {
+      "import": {
+        "types": "./dist/adapters/persistence/memory.d.mts",
+        "default": "./dist/adapters/persistence/memory.mjs"
+      },
+      "require": {
+        "types": "./dist/adapters/persistence/memory.d.ts",
+        "default": "./dist/adapters/persistence/memory.js"
+      }
+    },
+    "./adapters/persistence/prisma": {
+      "import": {
+        "types": "./dist/adapters/persistence/prisma.d.mts",
+        "default": "./dist/adapters/persistence/prisma.mjs"
+      },
+      "require": {
+        "types": "./dist/adapters/persistence/prisma.d.ts",
+        "default": "./dist/adapters/persistence/prisma.js"
+      }
+    },
+    "./adapters/persistence/supabase": {
+      "import": {
+        "types": "./dist/adapters/persistence/supabase.d.mts",
+        "default": "./dist/adapters/persistence/supabase.mjs"
+      },
+      "require": {
+        "types": "./dist/adapters/persistence/supabase.d.ts",
+        "default": "./dist/adapters/persistence/supabase.js"
+      }
+    },
+    "./adapters/persistence/typeorm": {
+      "import": {
+        "types": "./dist/adapters/persistence/typeorm.d.mts",
+        "default": "./dist/adapters/persistence/typeorm.mjs"
+      },
+      "require": {
+        "types": "./dist/adapters/persistence/typeorm.d.ts",
+        "default": "./dist/adapters/persistence/typeorm.js"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "ARCHITECTURE.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint src",
+    "prepack": "node ./scripts/sync-docs.mjs",
+    "postpack": "node ./scripts/clean-docs.mjs"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^10 || ^11",
+    "@nestjs/core": "^10 || ^11",
+    "@prisma/client": "^5 || ^6",
+    "@supabase/supabase-js": "^2",
+    "react": "^18 || ^19",
+    "react-dom": "^18 || ^19",
+    "reflect-metadata": "^0.2",
+    "rxjs": "^7",
+    "typeorm": "^0.3"
+  },
+  "peerDependenciesMeta": {
+    "@nestjs/common": {
+      "optional": true
+    },
+    "@nestjs/core": {
+      "optional": true
+    },
+    "@prisma/client": {
+      "optional": true
+    },
+    "@supabase/supabase-js": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    },
+    "reflect-metadata": {
+      "optional": true
+    },
+    "rxjs": {
+      "optional": true
+    },
+    "typeorm": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "@casl/ability": "^6.7.3",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@nestjs/common": "^11.0.6",
+    "@nestjs/core": "^11.0.6",
+    "@nestjs/platform-express": "^11.0.6",
+    "@nestjs/testing": "^11.0.6",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.1.0",
+    "@types/express": "^5.0.0",
+    "@types/react": "^19.0.7",
+    "@types/react-dom": "^19.0.3",
+    "@types/supertest": "^6.0.2",
+    "@vitest/coverage-v8": "^2.1.8",
+    "express": "^5.0.1",
+    "jsdom": "^25.0.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1",
+    "semantic-release": "^24.2.1",
+    "supertest": "^7.0.0",
+    "tsup": "^8.5.1",
+    "vitest": "^2.1.8"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}
