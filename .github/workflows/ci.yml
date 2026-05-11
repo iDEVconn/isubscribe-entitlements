@@ -5,21 +5,26 @@ on:
     branches: [main]
   pull_request:
 
+concurrency:
+  group: pipeline-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
-  contents: read
+  contents: write
+  pages: write
+  id-token: write
+  security-events: write
+  actions: read
+  packages: write
 
 jobs:
   ci:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        node: ['22', '24']
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node }}
+          node-version: '24'
           cache: 'npm'
       - run: npm ci
       - run: npm run lint
@@ -27,3 +32,34 @@ jobs:
       - run: npm run build
       - run: npm run typecheck
       - run: npm run test:coverage
+  release:
+    name: "Release"
+    needs: [ci]
+    if: |
+      github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+      needs.ci.result == 'success'
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.release_management.outputs.tag }}
+      bump_type: ${{ steps.release_management.outputs.bump_type }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.REPO_ACCESS_TOKEN || secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Bump version + tag
+        id: release_management
+        uses: ./.github/actions/bump
+        with:
+          token: ${{ secrets.REPO_ACCESS_TOKEN || secrets.GITHUB_TOKEN }}
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.release_management.outputs.tag }}
+          name: ${{ steps.release_management.outputs.tag }}
+          body: ${{ steps.release_management.outputs.release_body }}
+          generate_release_notes: false
+          token: ${{ secrets.REPO_ACCESS_TOKEN || secrets.GITHUB_TOKEN }}    
