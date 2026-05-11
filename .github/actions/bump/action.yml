@@ -94,8 +94,11 @@ runs:
         TAG="v$NEW_V"
         echo "tag=$TAG" >> $GITHUB_OUTPUT
 
-        # Stage the bumped package.json (lockfile is gitignored — skip it).
-        git add package.json 2>/dev/null || true
+        # Keep the publishable package version in sync with root.
+        npm version "$NEW_V" --no-git-tag-version --prefix packages/entitlements
+
+        # Stage both bumped package.json files (lockfile is gitignored — skip it).
+        git add package.json packages/entitlements/package.json 2>/dev/null || true
 
         # 5. Build the commit / release-body message.
         printf "ci: %s version bump to %s [skip ci]\n\nChanges:\n\n%s\n" \
