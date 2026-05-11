@@ -4,7 +4,12 @@
   "description": "Runtime entitlements engine for iSubscribe: turn purchased plans into runtime feature access via a framework-agnostic core, React provider/hooks, and NestJS guards/decorators. CASL is hidden behind a business-oriented API.",
   "license": "Apache-2.0",
   "engines": {
-    "node": ">=20"
+    "node": ">=24"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iDEVconn/isubscribe-entitlements.git",
+    "directory": "packages/entitlements"
   },
   "keywords": [
     "idevconn",
