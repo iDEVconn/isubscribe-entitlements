@@ -1,4 +1,4 @@
-name: Publish Embed to NPM
+name: Publish to npm
 
 on:
   workflow_dispatch:
@@ -17,34 +17,28 @@ jobs:
     name: 'Build & Publish @idevconn/isubscribe-entitlements'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-
-      - name: Setup Node
-        uses: actions/setup-node@v6
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 24
-          registry-url: https://registry.npmjs.org
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build embed package
-        working-directory: packages/entitlements
-        run: npm run build
-
-      - name: Check if version exists
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+      - run: npm ci
+      - name: Build
+        run: npm run build -w @idevconn/isubscribe-entitlements
+      - name: Check if version already published
         working-directory: packages/entitlements
         run: |
-          PACKAGE_NAME=$(node -p "require('./package.json').name")
-          VERSION=$(node -p "require('./package.json').version")
-          if npm view $PACKAGE_NAME@$VERSION version 2>/dev/null; then
-            echo "Version $VERSION already published. Skipping."
+          NAME=$(node -p "require('./package.json').name")
+          VER=$(node -p "require('./package.json').version")
+          if npm view "$NAME@$VER" version >/dev/null 2>&1; then
+            echo "Version $VER already published. Skipping."
             echo "SKIP_PUBLISH=true" >> $GITHUB_ENV
           else
             echo "SKIP_PUBLISH=false" >> $GITHUB_ENV
           fi
-
       - name: Publish
         if: env.SKIP_PUBLISH == 'false'
         working-directory: packages/entitlements
         run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

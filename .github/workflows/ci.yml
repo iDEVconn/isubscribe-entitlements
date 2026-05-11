@@ -11,11 +11,7 @@ concurrency:
 
 permissions:
   contents: write
-  pages: write
   id-token: write
-  security-events: write
-  actions: read
-  packages: write
 
 jobs:
   ci:
