@@ -1,24 +1,24 @@
-name: "Bump Version & Push"
-description: "Detects the highest semver bump from conventional commits since the last tag, increments the root package.json version, commits, tags, and pushes."
+name: 'Bump Version & Push'
+description: 'Detects the highest semver bump from conventional commits since the last tag, increments the root package.json version, commits, tags, and pushes.'
 
 inputs:
   token:
-    description: "GitHub PAT (or GITHUB_TOKEN) used to push the bump commit and the tag."
+    description: 'GitHub PAT (or GITHUB_TOKEN) used to push the bump commit and the tag.'
     required: true
 
 outputs:
   tag:
-    description: "Created version tag, e.g. v0.2.0"
+    description: 'Created version tag, e.g. v0.2.0'
     value: ${{ steps.version-bump.outputs.tag }}
   bump_type:
-    description: "Detected semver bump type: major | minor | patch"
+    description: 'Detected semver bump type: major | minor | patch'
     value: ${{ steps.version-bump.outputs.bump_type }}
   release_body:
-    description: "Markdown body suitable for the GitHub Release"
+    description: 'Markdown body suitable for the GitHub Release'
     value: ${{ steps.version-bump.outputs.release_body }}
 
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
     - name: Setup git identity
       shell: bash
