@@ -18,11 +18,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: '24'
+          cache: 'npm'
           registry-url: 'https://registry.npmjs.org'
-      - run: npm install -g npm@latest
+      - name: Clean deprecated npm config
+        run: |
+          npm config delete always-auth --location=user 2>/dev/null || true
+          npm config delete always-auth --location=project 2>/dev/null || true
+          rm -f .npmrc
+      - name: Ensure npm has OIDC trusted publishing support
+        run: npm install -g npm@latest
+      - name: Show toolchain
+        run: |
+          node --version
+          npm --version
       - run: npm ci
       - name: Build
         run: npm run build -w @idevconn/isubscribe-entitlements
@@ -40,4 +51,4 @@ jobs:
       - name: Publish
         if: env.SKIP_PUBLISH == 'false'
         working-directory: packages/entitlements
-        run: npm publish --access public
+        run: npm publish --provenance --access public
