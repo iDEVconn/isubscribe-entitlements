@@ -1,4 +1,4 @@
-# Design — `@isubscribe/entitlements`
+# Design — `@idevconn/entitlements`
 
 A high-level design overview written for product owners, architects, and new
 engineers joining the iSubscribe platform. It explains **why this module
@@ -11,7 +11,7 @@ without diving into source code. For implementation details see
 
 ## 1. Intention
 
-`@isubscribe/entitlements` is the **runtime authority** that answers a single
+`@idevconn/entitlements` is the **runtime authority** that answers a single
 question across an entire product: _"is this user allowed to do this thing
 right now, and if so, how much of it can they do?"_
 
@@ -69,7 +69,7 @@ teams stop thinking about the plumbing.
 
 ## 3. Solution at a glance
 
-`@isubscribe/entitlements` is a single npm package with three integration
+`@idevconn/entitlements` is a single npm package with three integration
 surfaces:
 
 - A **framework-agnostic core** that builds an `EntitlementsService` per user.
@@ -90,7 +90,7 @@ public API.
 ```mermaid
 flowchart LR
     PB[Plan Builder] -->|"plans + features"| Core
-    Widget["@isubscribe/widget-react"] -->|"checkout"| PO[Payment Orchestrator]
+    Widget["@idevconn/widget-react"] -->|"checkout"| PO[Payment Orchestrator]
     PO -->|"on success"| App[Consumer App]
     App -->|"saveSubscription"| DB[(Persistence)]
     Core[Entitlements Core] --> DB
@@ -224,7 +224,7 @@ sequenceDiagram
     participant Widget as widget-react
     participant Orch as Payment Orchestrator
     participant App as Consumer App
-    participant Ent as @isubscribe/entitlements
+    participant Ent as @idevconn/entitlements
     participant DB as Persistence
 
     Note over User,DB: 1. Discovery

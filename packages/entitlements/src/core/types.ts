@@ -1,5 +1,5 @@
 /**
- * Public domain types for `@isubscribe/entitlements`.
+ * Public domain types for `@idevconn/entitlements`.
  *
  * Hand-shake contracts:
  *   - Plan Builder produces `PlanDefinition`.

@@ -1,5 +1,5 @@
 /**
- * Public barrel for `@isubscribe/entitlements/nest`.
+ * Public barrel for `@idevconn/entitlements/nest`.
  *
  * Lives behind a subpath so React/standalone consumers never bundle Nest.
  */

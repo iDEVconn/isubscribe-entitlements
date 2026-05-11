@@ -2,7 +2,7 @@
   "name": "example-nest-api",
   "version": "1.0.0",
   "private": true,
-  "description": "Example NestJS app consuming @isubscribe/entitlements (memory persistence + RequireSubscription guard).",
+  "description": "Example NestJS app consuming @idevconn/entitlements (memory persistence + RequireSubscription guard).",
   "engines": {
     "node": ">=20"
   },
@@ -14,7 +14,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@isubscribe/entitlements": "*",
+    "@idevconn/isubscribe-entitlements": "*",
     "@nestjs/common": "^11.0.6",
     "@nestjs/core": "^11.0.6",
     "@nestjs/platform-express": "^11.0.6",

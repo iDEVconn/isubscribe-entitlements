@@ -80,7 +80,7 @@ export interface SupabasePersistenceAdapterOptions {
 /**
  * Supabase-backed adapter. Atomic increment uses an RPC function (see SQL above).
  *
- * Re-exported as `@isubscribe/entitlements/adapters/persistence/supabase`.
+ * Re-exported as `@idevconn/entitlements/adapters/persistence/supabase`.
  */
 export class SupabasePersistenceAdapter implements SubscriptionPersistenceAdapter {
   private readonly client: SupabaseClientLike;

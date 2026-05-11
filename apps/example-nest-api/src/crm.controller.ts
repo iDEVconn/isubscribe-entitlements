@@ -10,14 +10,14 @@ import {
   type INestApplication
 } from '@nestjs/common';
 
-import { RequireSubscription, ENTITLEMENTS } from '@isubscribe/entitlements/nest';
+import { RequireSubscription, ENTITLEMENTS } from '@idevconn/isubscribe-entitlements/nest';
 import type {
   ActiveSubscription,
   Entitlements,
   EntitlementsContext,
   FeatureValue,
   SubscriptionStatus
-} from '@isubscribe/entitlements';
+} from '@idevconn/isubscribe-entitlements';
 
 @Controller()
 export class CrmController {

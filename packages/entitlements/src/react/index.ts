@@ -1,5 +1,5 @@
 /**
- * Public barrel for `@isubscribe/entitlements/react`.
+ * Public barrel for `@idevconn/entitlements/react`.
  *
  * Lives behind a subpath so backend-only consumers never bundle React.
  */

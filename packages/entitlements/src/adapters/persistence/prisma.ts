@@ -80,7 +80,7 @@ type SubscriptionRow = ActiveSubscription;
  * Prisma-backed adapter. Atomic increments use `update { increment }`; the
  * row is created on first call via `upsert`.
  *
- * Re-exported as `@isubscribe/entitlements/adapters/persistence/prisma`.
+ * Re-exported as `@idevconn/entitlements/adapters/persistence/prisma`.
  */
 export class PrismaPersistenceAdapter implements SubscriptionPersistenceAdapter {
   private readonly client: PrismaClientLike;

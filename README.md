@@ -1,4 +1,4 @@
-# `@isubscribe/entitlements`
+# `@idevconn/entitlements`
 
 > The runtime engine that turns purchased subscription plans into real feature
 > access across your product — boolean gates, numeric limits, metered usage —
@@ -22,7 +22,7 @@ The iSubscribe platform already covers the rest of the subscription lifecycle:
 
 - **Plan Builder** — author plans (which features, which limits, which
   metered budgets).
-- **`@isubscribe/widget-react`** — render plans, collect the customer's pick.
+- **`@idevconn/widget-react`** — render plans, collect the customer's pick.
 - **Payment Orchestrator** — process checkout via Stripe / Paddle / PayPal /
   custom.
 
@@ -31,7 +31,7 @@ What was missing was the connective tissue between **"user paid"** and
 CASL or feature-flag SDKs into their product code, double-counts metered
 usage, and disagrees on whether `403` or `402` means "no subscription".
 
-`@isubscribe/entitlements` is that missing piece, distilled into one package
+`@idevconn/entitlements` is that missing piece, distilled into one package
 with a deliberately small surface.
 
 ---
@@ -67,9 +67,9 @@ flowchart TB
     end
 
     subgraph publicApi [Public surface - subpath exports]
-        ReactPkg["@isubscribe/entitlements/react"]
-        NestPkg["@isubscribe/entitlements/nest"]
-        Core["@isubscribe/entitlements (core)"]
+        ReactPkg["@idevconn/entitlements/react"]
+        NestPkg["@idevconn/entitlements/nest"]
+        Core["@idevconn/entitlements (core)"]
     end
 
     subgraph engine [Engine - hidden behind the API]
@@ -90,7 +90,7 @@ flowchart TB
 
     subgraph platform [iSubscribe platform - upstream]
         PB[Plan Builder]
-        Widget["@isubscribe/widget-react"]
+        Widget["@idevconn/widget-react"]
         Pay[Payment Orchestrator]
     end
 
@@ -131,7 +131,7 @@ purchase flow, multi-tenant key composition) lives in
 ## Install
 
 ```bash
-npm install @isubscribe/entitlements
+npm install @idevconn/entitlements
 ```
 
 The package ships **one** publishable npm name with subpath exports. Install
@@ -157,8 +157,8 @@ honest.
 Three lines that cover 90% of usage:
 
 ```ts
-import { createEntitlements } from '@isubscribe/entitlements';
-import { createMemoryAdapter } from '@isubscribe/entitlements/adapters/persistence/memory';
+import { createEntitlements } from '@idevconn/entitlements';
+import { createMemoryAdapter } from '@idevconn/entitlements/adapters/persistence/memory';
 
 const entitlements = createEntitlements({
   persistence: createMemoryAdapter(),
@@ -187,15 +187,15 @@ configuration knobs) see [`doc/guide.md`](./doc/guide.md).
 
 ## Main entry points
 
-| Import                                                   | What it gives you                                                                                                 |
-| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `@isubscribe/entitlements`                               | `createEntitlements`, `EntitlementsService`, all types and error classes                                          |
-| `@isubscribe/entitlements/react`                         | `<EntitlementsProvider>`, `<Feature>`, `<LockedFeature>`, `useSubscription`, `useFeature`, `useLimit`, `useUsage` |
-| `@isubscribe/entitlements/nest`                          | `EntitlementsModule`, `@RequireSubscription`, `EntitlementsGuard`, `ConsumeOnSuccessInterceptor`, DI tokens       |
-| `@isubscribe/entitlements/adapters/persistence/memory`   | `createMemoryAdapter` — single-process, for tests/demos                                                           |
-| `@isubscribe/entitlements/adapters/persistence/prisma`   | `createPrismaAdapter` — atomic counters via `update increment`                                                    |
-| `@isubscribe/entitlements/adapters/persistence/supabase` | `createSupabaseAdapter` — atomic counters via Postgres RPC                                                        |
-| `@isubscribe/entitlements/adapters/persistence/typeorm`  | `createTypeOrmAdapter` — atomic counters via `Repository.increment`                                               |
+| Import                                                 | What it gives you                                                                                                 |
+| ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| `@idevconn/entitlements`                               | `createEntitlements`, `EntitlementsService`, all types and error classes                                          |
+| `@idevconn/entitlements/react`                         | `<EntitlementsProvider>`, `<Feature>`, `<LockedFeature>`, `useSubscription`, `useFeature`, `useLimit`, `useUsage` |
+| `@idevconn/entitlements/nest`                          | `EntitlementsModule`, `@RequireSubscription`, `EntitlementsGuard`, `ConsumeOnSuccessInterceptor`, DI tokens       |
+| `@idevconn/entitlements/adapters/persistence/memory`   | `createMemoryAdapter` — single-process, for tests/demos                                                           |
+| `@idevconn/entitlements/adapters/persistence/prisma`   | `createPrismaAdapter` — atomic counters via `update increment`                                                    |
+| `@idevconn/entitlements/adapters/persistence/supabase` | `createSupabaseAdapter` — atomic counters via Postgres RPC                                                        |
+| `@idevconn/entitlements/adapters/persistence/typeorm`  | `createTypeOrmAdapter` — atomic counters via `Repository.increment`                                               |
 
 ---
 

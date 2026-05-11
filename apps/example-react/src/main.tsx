@@ -5,8 +5,8 @@ import {
   createEntitlements,
   type PlanDefinition,
   type PlanResolver
-} from '@isubscribe/entitlements';
-import { createMemoryAdapter } from '@isubscribe/entitlements/adapters/persistence/memory';
+} from '@idevconn/isubscribe-entitlements';
+import { createMemoryAdapter } from '@idevconn/isubscribe-entitlements/adapters/persistence/memory';
 import {
   EntitlementsProvider,
   Feature,
@@ -15,7 +15,7 @@ import {
   useLimit,
   useSubscription,
   useUsage
-} from '@isubscribe/entitlements/react';
+} from '@idevconn/isubscribe-entitlements/react';
 
 const PRO: PlanDefinition = {
   id: 'pro_monthly',
@@ -113,7 +113,7 @@ function ExportProbe() {
 function App() {
   return (
     <main style={{ fontFamily: 'system-ui, sans-serif', maxWidth: 720, margin: '40px auto' }}>
-      <h1>@isubscribe/entitlements demo</h1>
+      <h1>@idevconn/entitlements demo</h1>
 
       <section>
         <h2>Feature gate</h2>

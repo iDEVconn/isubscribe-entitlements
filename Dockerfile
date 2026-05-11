@@ -13,7 +13,7 @@ RUN npm install --no-audit --no-fund
 COPY packages packages
 COPY apps apps
 
-RUN npm run build --workspace @isubscribe/entitlements
+RUN npm run build --workspace @idevconn/entitlements
 RUN npm run build --workspace example-nest-api
 
 FROM node:24-alpine AS runtime

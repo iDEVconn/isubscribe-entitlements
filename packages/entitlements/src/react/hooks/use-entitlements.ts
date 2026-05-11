@@ -8,7 +8,7 @@ export function useEntitlementsContext(): EntitlementsContextValue {
   const ctx = useContext(EntitlementsReactContext);
   if (!ctx) {
     throw new Error(
-      '@isubscribe/entitlements/react: useSubscription/useFeature/useLimit/useUsage must be used inside <EntitlementsProvider>'
+      '@idevconn/entitlements/react: useSubscription/useFeature/useLimit/useUsage must be used inside <EntitlementsProvider>'
     );
   }
   return ctx;

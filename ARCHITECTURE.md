@@ -1,4 +1,4 @@
-# Architecture — `@isubscribe/entitlements`
+# Architecture — `@idevconn/entitlements`
 
 This document describes the internal moving parts of the package, the contracts
 between them, and the recommended data shapes for each persistence adapter.
@@ -18,7 +18,7 @@ flowchart TD
       WB[Webhook handler]
       Ctx["EntitlementsContext{userId,tenantId}"]
     end
-    subgraph Pkg["@isubscribe/entitlements"]
+    subgraph Pkg["@idevconn/entitlements"]
       F[createEntitlements]
       S[CoreEntitlementsService]
       Cache[(MemoryCache TTL)]

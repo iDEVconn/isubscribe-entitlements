@@ -2,7 +2,7 @@
   "name": "example-react",
   "version": "1.0.0",
   "private": true,
-  "description": "Example Vite + React app showing @isubscribe/entitlements/react usage.",
+  "description": "Example Vite + React app showing @idevconn/entitlements/react usage.",
   "engines": {
     "node": ">=20"
   },
@@ -13,7 +13,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@isubscribe/entitlements": "*",
+    "@idevconn/isubscribe-entitlements": "*",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

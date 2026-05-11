@@ -168,7 +168,7 @@
     "@types/react": "^19.0.7",
     "@types/react-dom": "^19.0.3",
     "@types/supertest": "^6.0.2",
-    "@vitest/coverage-v8": "^2.1.8",
+    "@vitest/coverage-v8": "^4.1.6",
     "express": "^5.0.1",
     "jsdom": "^25.0.1",
     "react": "^19.0.0",
@@ -178,7 +178,7 @@
     "semantic-release": "^24.2.1",
     "supertest": "^7.0.0",
     "tsup": "^8.5.1",
-    "vitest": "^2.1.8"
+    "vitest": "^4.1.6"
   },
   "publishConfig": {
     "access": "public",

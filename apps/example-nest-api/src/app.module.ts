@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 
-import { EntitlementsModule } from '@isubscribe/entitlements/nest';
-import { createMemoryAdapter } from '@isubscribe/entitlements/adapters/persistence/memory';
+import { EntitlementsModule } from '@idevconn/isubscribe-entitlements/nest';
+import { createMemoryAdapter } from '@idevconn/isubscribe-entitlements/adapters/persistence/memory';
 
 import { CrmController } from './crm.controller';
 import { PLANS, planResolver } from './plans';

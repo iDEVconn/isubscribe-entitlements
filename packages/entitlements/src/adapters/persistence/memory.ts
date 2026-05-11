@@ -10,7 +10,7 @@ export interface MemoryPersistenceAdapterOptions {
  * In-memory adapter. Useful for tests, demos, and the example app. Not safe
  * across processes; do not use in production.
  *
- * Re-exported as `@isubscribe/entitlements/adapters/persistence/memory`.
+ * Re-exported as `@idevconn/entitlements/adapters/persistence/memory`.
  */
 export class MemoryPersistenceAdapter implements SubscriptionPersistenceAdapter {
   private readonly subscriptions = new Map<string, ActiveSubscription>();

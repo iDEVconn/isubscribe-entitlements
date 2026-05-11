@@ -1,4 +1,4 @@
-import type { PlanDefinition, PlanResolver } from '@isubscribe/entitlements';
+import type { PlanDefinition, PlanResolver } from '@idevconn/isubscribe-entitlements';
 
 export const PLANS: Record<string, PlanDefinition> = {
   free: {

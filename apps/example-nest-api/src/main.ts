@@ -8,8 +8,8 @@ import {
   ENTITLEMENTS,
   ENTITLEMENTS_CONTEXT_RESOLVER,
   type EntitlementsContextResolver
-} from '@isubscribe/entitlements/nest';
-import type { Entitlements } from '@isubscribe/entitlements';
+} from '@idevconn/isubscribe-entitlements/nest';
+import type { Entitlements } from '@idevconn/isubscribe-entitlements';
 
 import { AppModule } from './app.module';
 

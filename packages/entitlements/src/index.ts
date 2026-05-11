@@ -1,10 +1,10 @@
 /**
- * Public barrel for `@isubscribe/entitlements` (core).
+ * Public barrel for `@idevconn/entitlements` (core).
  *
  * Subpath re-exports:
- *   - `@isubscribe/entitlements/react`
- *   - `@isubscribe/entitlements/nest`
- *   - `@isubscribe/entitlements/adapters/persistence/{memory,prisma,supabase,typeorm}`
+ *   - `@idevconn/entitlements/react`
+ *   - `@idevconn/entitlements/nest`
+ *   - `@idevconn/entitlements/adapters/persistence/{memory,prisma,supabase,typeorm}`
  */
 
 export { createEntitlements } from './core/create-entitlements';

@@ -66,7 +66,7 @@ interface UsageEntity {
  * TypeORM-backed adapter. Atomic increments use `Repository.increment()`, which
  * issues a single `UPDATE ... SET amount = amount + ?` statement.
  *
- * Re-exported as `@isubscribe/entitlements/adapters/persistence/typeorm`.
+ * Re-exported as `@idevconn/entitlements/adapters/persistence/typeorm`.
  */
 export class TypeOrmPersistenceAdapter implements SubscriptionPersistenceAdapter {
   private readonly subs: TypeOrmRepositoryLike<SubscriptionEntity>;

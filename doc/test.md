@@ -1,4 +1,4 @@
-# Testing `@isubscribe/entitlements`
+# Testing `@idevconn/entitlements`
 
 Five levels of testing, ordered from quickest to most realistic. Pick whichever you need.
 
@@ -21,8 +21,8 @@ cd /Users/kudenv/pr/www/cvrnd/mm_analitics/isubscribe-entitlements
 ## Level 1 — Automated tests
 
 ```bash
-npm run -w @isubscribe/entitlements test           # 58/58 pass
-npm run -w @isubscribe/entitlements test:coverage  # with coverage report
+npm run -w @idevconn/entitlements test           # 58/58 pass
+npm run -w @idevconn/entitlements test:coverage  # with coverage report
 ```
 
 Coverage HTML lands at `packages/entitlements/coverage/index.html`.
@@ -246,8 +246,8 @@ npm init -y >/dev/null
 npm install /abs/path/to/isubscribe-entitlements/packages/entitlements/isubscribe-entitlements-0.1.0.tgz
 
 cat > probe.mjs <<'JS'
-import { createEntitlements } from '@isubscribe/entitlements';
-import { createMemoryAdapter } from '@isubscribe/entitlements/adapters/persistence/memory';
+import { createEntitlements } from '@idevconn/entitlements';
+import { createMemoryAdapter } from '@idevconn/entitlements/adapters/persistence/memory';
 
 const ent = createEntitlements({
   persistence: createMemoryAdapter(),
@@ -276,7 +276,7 @@ To verify the `/react` and `/nest` subpaths resolve at all (without actually pul
 
 ```bash
 node --input-type=module \
-  -e "import('@isubscribe/entitlements/react').then(m => console.log('react:', Object.keys(m)))"
+  -e "import('@idevconn/entitlements/react').then(m => console.log('react:', Object.keys(m)))"
 # → react: [ 'EntitlementsProvider', 'Feature', 'LockedFeature', 'useSubscription', ... ]
 ```
 
@@ -300,6 +300,6 @@ docker compose up --build
 
 - **`npm run start:dev:nest` exits immediately.** Make sure `apps/example-nest-api/.env` exists; copy from `.env.example`.
 - **React demo shows nothing.** The Vite dev server must be on Node 20+. Check `node --version`.
-- **`Cannot find module '@isubscribe/entitlements'` in Level 4/5.** Run `npm run build:pkg` first; `dist/` must exist.
+- **`Cannot find module '@idevconn/entitlements'` in Level 4/5.** Run `npm run build:pkg` first; `dist/` must exist.
 - **Tarball install fails with `EBADENGINE`.** The package declares `engines.node >=20`; upgrade Node.
 - **402 vs 403 confusion.** 402 = no active subscription record at all and no fallback plan; 403 = subscription/fallback exists but the specific feature is denied.

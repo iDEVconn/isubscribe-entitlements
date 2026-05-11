@@ -1,5 +1,5 @@
 /**
- * Injection tokens for `@isubscribe/entitlements/nest`. Exposed so that
+ * Injection tokens for `@idevconn/entitlements/nest`. Exposed so that
  * consumers can access raw collaborators when they need to.
  */
 export const ENTITLEMENTS = Symbol.for('isubscribe.entitlements.handle');

@@ -1,7 +1,7 @@
-# Consumer Guide — `@isubscribe/entitlements`
+# Consumer Guide — `@idevconn/entitlements`
 
 A practical, end-to-end guide for application engineers integrating
-`@isubscribe/entitlements` into their product. It answers two questions:
+`@idevconn/entitlements` into their product. It answers two questions:
 
 1. **How do I use it?** — install, configure, gate UI and APIs, observe usage.
 2. **How does it work?** — what every call does under the hood, where state
@@ -52,7 +52,7 @@ flowchart LR
 
     subgraph consumer [Your Application]
         Webhook[Webhook handler]
-        Entitlements["@isubscribe/entitlements<br/>(this package)"]
+        Entitlements["@idevconn/entitlements<br/>(this package)"]
         UI[React UI gates]
         API[NestJS API guards]
         DB[("Subscriptions DB<br/>Postgres / MySQL / ...")]
@@ -81,7 +81,7 @@ This package is the _bridge_ between "user paid" and "user can".
 
 ```mermaid
 flowchart TB
-    subgraph subpath [Subpath exports of @isubscribe/entitlements]
+    subgraph subpath [Subpath exports of @idevconn/entitlements]
         Core["/ (core)"]
         ReactPkg["/react"]
         NestPkg["/nest"]
@@ -122,7 +122,7 @@ flowchart TB
 ### What you actually install
 
 ```bash
-npm install @isubscribe/entitlements
+npm install @idevconn/entitlements
 ```
 
 That brings in only `@casl/ability` and `zod`. Everything else is **optional
@@ -283,8 +283,8 @@ flowchart LR
 ```ts
 // app.module.ts
 import { Module } from '@nestjs/common';
-import { EntitlementsModule } from '@isubscribe/entitlements/nest';
-import { createMemoryAdapter } from '@isubscribe/entitlements/adapters/persistence/memory';
+import { EntitlementsModule } from '@idevconn/entitlements/nest';
+import { createMemoryAdapter } from '@idevconn/entitlements/adapters/persistence/memory';
 import { PLANS, planResolver } from './plans';
 
 @Module({
@@ -306,7 +306,7 @@ export class AppModule {}
 ```ts
 // crm.controller.ts
 import { Controller, Get } from '@nestjs/common';
-import { RequireSubscription } from '@isubscribe/entitlements/nest';
+import { RequireSubscription } from '@idevconn/entitlements/nest';
 
 @Controller()
 export class CrmController {
@@ -331,7 +331,7 @@ import {
   ConsumeOnSuccessInterceptor,
   ENTITLEMENTS,
   ENTITLEMENTS_CONTEXT_RESOLVER
-} from '@isubscribe/entitlements/nest';
+} from '@idevconn/entitlements/nest';
 
 const reflector = app.get(Reflector);
 const handle = app.get(ENTITLEMENTS);
@@ -372,8 +372,8 @@ flowchart LR
 
 ```tsx
 // main.tsx
-import { EntitlementsProvider } from '@isubscribe/entitlements/react';
-import { createMemoryAdapter } from '@isubscribe/entitlements/adapters/persistence/memory';
+import { EntitlementsProvider } from '@idevconn/entitlements/react';
+import { createMemoryAdapter } from '@idevconn/entitlements/adapters/persistence/memory';
 
 const config = {
   persistence: createMemoryAdapter({ subscriptions: seededFromServer }),
@@ -397,7 +397,7 @@ import {
   useLimit,
   useUsage,
   useSubscription
-} from '@isubscribe/entitlements/react';
+} from '@idevconn/entitlements/react';
 
 export function App() {
   const { allowed } = useFeature('crm.export');
@@ -445,8 +445,8 @@ See [`apps/example-react`](../apps/example-react) for the full reference.
 ## 10. Quickstart — framework-agnostic (raw Node)
 
 ```ts
-import { createEntitlements } from '@isubscribe/entitlements';
-import { createMemoryAdapter } from '@isubscribe/entitlements/adapters/persistence/memory';
+import { createEntitlements } from '@idevconn/entitlements';
+import { createMemoryAdapter } from '@idevconn/entitlements/adapters/persistence/memory';
 
 const entitlements = createEntitlements({
   persistence: createMemoryAdapter(),
