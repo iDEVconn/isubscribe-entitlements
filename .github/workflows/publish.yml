@@ -22,6 +22,7 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://registry.npmjs.org'
+      - run: npm install -g npm@latest
       - run: npm ci
       - name: Build
         run: npm run build -w @idevconn/isubscribe-entitlements
@@ -39,4 +40,4 @@ jobs:
       - name: Publish
         if: env.SKIP_PUBLISH == 'false'
         working-directory: packages/entitlements
-        run: npm publish --provenance --access public
+        run: npm publish --access public
