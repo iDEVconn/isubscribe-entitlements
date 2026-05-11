@@ -181,7 +181,6 @@
     "vitest": "^4.1.6"
   },
   "publishConfig": {
-    "access": "public",
-    "provenance": false
+    "access": "public"
   }
 }
