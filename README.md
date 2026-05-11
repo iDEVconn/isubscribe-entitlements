@@ -284,7 +284,7 @@ docker compose up --build
 
 ## Compatibility
 
-- **Node** ≥ 20 (LTS). CI runs on 22 and 24.
+- **Node** ≥ 20 (LTS). CI runs on 24.
 - **TypeScript** ≥ 5.4 recommended (strict, `exactOptionalPropertyTypes`).
 - **React** 18 or 19 (peer, optional).
 - **NestJS** 10 or 11 (peer, optional).
@@ -302,12 +302,22 @@ isubscribe-entitlements/
   doc/{guide,design,test}.md    # consumer guide, design rationale, test recipes
   ARCHITECTURE.md               # source-level architecture
   Dockerfile + docker-compose.yml
-  .github/workflows/{ci,release}.yml
+  .github/workflows/ci.yml      # CI + release
+  .github/workflows/publish.yml # npm publish
 ```
 
-CI runs lint, format check, typecheck, full test suite (with coverage), and
-build on every push (Node 22 and 24). Releases use semantic-release inside
-`packages/entitlements` and publish to npm with provenance via GitHub OIDC.
+Two GitHub Actions workflows handle the full pipeline:
+
+**[`ci.yml`](.github/workflows/ci.yml)** — runs on every push to `main` and on all pull requests:
+
+1. **ci** — lint, format check, build, typecheck, test coverage (Node 24)
+2. **release** — bumps `package.json` version from conventional commit messages, tags, and creates a GitHub Release (main branch only, runs after `ci` passes)
+
+**[`publish.yml`](.github/workflows/publish.yml)** — publishes to npm, triggered by `v*` tags, a published GitHub Release, or manually:
+
+- Builds the package, checks if the version is already on npm, then publishes with provenance via `NPM_TOKEN`.
+
+Requires a `NPM_TOKEN` repository secret for publishing.
 
 ---
 
@@ -320,8 +330,7 @@ locally before opening a PR:
 npm run lint && npm run format:check && npm run typecheck && npm run test && npm run build
 ```
 
-The pre-commit hook runs lint-staged on staged files; the CI runs the full
-matrix.
+The pre-commit hook runs lint-staged on staged files; the CI pipeline runs the full suite on every push.
 
 ---
 
