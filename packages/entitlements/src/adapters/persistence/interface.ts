@@ -19,6 +19,25 @@ export interface SubscriptionPersistenceAdapter {
    */
   incrementUsage(ctx: EntitlementsContext, metric: string, amount: number): Promise<void>;
 
+  /**
+   * Atomically increment usage **and** enforce the cap inside a single
+   * database transaction, eliminating the TOCTOU race that exists when
+   * `getUsage` and `incrementUsage` are called separately.
+   *
+   * When implemented, `consume()` will prefer this method over the non-atomic
+   * fallback path. Throw `LimitExceededError` when the increment would push
+   * usage above `limit`.
+   *
+   * Optional: adapters that do not implement this fall back to the non-atomic
+   * `getUsage → compare → incrementUsage` sequence.
+   */
+  incrementUsageCapped?(
+    ctx: EntitlementsContext,
+    metric: string,
+    amount: number,
+    limit: number
+  ): Promise<void>;
+
   /** Optional: hard-reset a counter (admin / period rollover hook). */
   resetUsage?(ctx: EntitlementsContext, metric: string): Promise<void>;
 }

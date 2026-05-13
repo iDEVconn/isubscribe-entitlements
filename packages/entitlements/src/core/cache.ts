@@ -15,7 +15,21 @@ export interface MemoryCacheOptions {
   defaultTtlMs?: number;
 }
 
-/** In-memory cache with optional per-entry TTL. Process-local; not multi-instance safe. */
+/**
+ * In-memory cache with optional per-entry TTL.
+ *
+ * @remarks
+ * **Process-local — not safe for multi-process or multi-pod deployments.**
+ * When running more than one server instance (e.g. a load-balanced cluster or
+ * a serverless environment), each process holds its own isolated cache. A write
+ * on instance A is invisible to instance B, so resolved plans can stay stale
+ * for up to `cacheTtlMs` after a subscription change.
+ *
+ * Mitigations:
+ * - Set `cacheTtlMs: 0` to disable caching for high-value entitlement gates.
+ * - Replace with a shared `CacheAdapter` implementation (e.g. Redis/Valkey)
+ *   and pass it as `cache` in `EntitlementsConfig`.
+ */
 export class MemoryCache implements CacheAdapter {
   private readonly store = new Map<string, { value: unknown; expiresAt: number }>();
   private readonly defaultTtlMs: number;

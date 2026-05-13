@@ -19,11 +19,11 @@ export class EntitlementsError extends Error {
     this.name = 'EntitlementsError';
   }
 
-  toResponseBody(): Record<string, unknown> {
+  toResponseBody(verbose = true): Record<string, unknown> {
     return {
       code: this.code,
       message: this.message,
-      ...(this.details ? { details: this.details } : {})
+      ...(verbose && this.details ? { details: this.details } : {})
     };
   }
 }

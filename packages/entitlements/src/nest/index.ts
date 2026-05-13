@@ -17,11 +17,19 @@ export type {
   RequireSubscriptionMetadata
 } from './require-subscription.decorator';
 
-export { defaultEntitlementsContextResolver } from './entitlements-context';
+export { PublicEntitlement } from './public-entitlement.decorator';
+
+export {
+  defaultEntitlementsContextResolver,
+  unsafeHeaderBasedEntitlementsContextResolver
+} from './entitlements-context';
 export type { EntitlementsContextResolver } from './entitlements-context';
 
 export {
   ENTITLEMENTS,
   ENTITLEMENTS_CONTEXT_RESOLVER,
+  ENTITLEMENTS_DEFAULT_POLICY,
+  ENTITLEMENTS_EXPOSE_ERROR_DETAILS,
+  PUBLIC_ENTITLEMENT_METADATA,
   REQUIRE_SUBSCRIPTION_METADATA
 } from './tokens';

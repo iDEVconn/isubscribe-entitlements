@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, cleanup } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import { createMemoryAdapter } from '../../../src/adapters/persistence/memory';
 import { createEntitlements } from '../../../src/core/create-entitlements';
@@ -62,6 +62,10 @@ async function renderWithEntitlements(ui: ReactNode) {
 }
 
 describe('React integration', () => {
+  // RTL does not auto-cleanup when vitest runs with globals:false (globalThis.afterEach is
+  // not defined, so @testing-library/react's afterEach hook is never registered).
+  // Explicit cleanup prevents renders from accumulating across tests.
+  afterEach(() => cleanup());
   it('<Feature> renders children when granted, nothing when denied', async () => {
     await renderWithEntitlements(
       <>
@@ -155,5 +159,94 @@ describe('React integration', () => {
     );
 
     expect(screen.getByTestId('ssr').textContent).toBe('hydrated');
+  });
+
+  it('clears stale entitlements immediately when service changes (L3)', async () => {
+    // User A has an active subscription with crm.export = true.
+    const adapterA = createMemoryAdapter();
+    await adapterA.saveSubscription(ACTIVE_SUB);
+    const serviceA = createEntitlements({ persistence: adapterA, planResolver }).for({
+      userId: ACTIVE_SUB.userId
+    });
+
+    // User B has no subscription — getPlan() will throw NoActiveSubscriptionError.
+    const adapterB = createMemoryAdapter();
+    const serviceB = createEntitlements({ persistence: adapterB, planResolver }).for({
+      userId: 'user_b'
+    });
+
+    const { rerender } = render(
+      <EntitlementsProvider service={serviceA}>
+        <FeatureProbe name="crm.export" />
+      </EntitlementsProvider>
+    );
+
+    // Wait for user A's data to fully load.
+    await waitFor(() => expect(screen.getByTestId('feature:crm.export').textContent).toBe('yes'));
+
+    // Switch to user B — service prop changes.
+    rerender(
+      <EntitlementsProvider service={serviceB}>
+        <FeatureProbe name="crm.export" />
+      </EntitlementsProvider>
+    );
+
+    // The snapshot must be reset to {} synchronously before loading starts.
+    // This means we should see 'no' immediately — not the stale 'yes' from user A.
+    expect(screen.getByTestId('feature:crm.export').textContent).toBe('no');
+
+    // After the async load settles (error state — no subscription for user B),
+    // entitlements remains {} → still 'no'.
+    await waitFor(() => expect(screen.getByTestId('feature:crm.export').textContent).toBe('no'));
+  });
+
+  it('loads on service change even when initialSnapshot was provided (SSR → user switch)', async () => {
+    // Simulates: server renders page for user A with SSR snapshot, then user A
+    // signs out and user B signs in without a full page reload.
+    const adapterA = createMemoryAdapter();
+    await adapterA.saveSubscription(ACTIVE_SUB);
+    const serviceA = createEntitlements({ persistence: adapterA, planResolver }).for({
+      userId: ACTIVE_SUB.userId
+    });
+
+    const adapterB = createMemoryAdapter();
+    await adapterB.saveSubscription(ACTIVE_SUB); // user B also has the sub
+    const serviceB = createEntitlements({ persistence: adapterB, planResolver }).for({
+      userId: ACTIVE_SUB.userId
+    });
+
+    const { rerender } = render(
+      <EntitlementsProvider
+        service={serviceA}
+        initialSnapshot={{
+          status: 'ready',
+          subscription: ACTIVE_SUB,
+          plan: {
+            id: ACTIVE_SUB.planId,
+            name: ACTIVE_SUB.planId,
+            features: ACTIVE_SUB.entitlements,
+            source: 'subscription'
+          },
+          entitlements: ACTIVE_SUB.entitlements,
+          error: null
+        }}
+      >
+        <FeatureProbe name="crm.export" />
+      </EntitlementsProvider>
+    );
+
+    // SSR snapshot hydrates immediately.
+    expect(screen.getByTestId('feature:crm.export').textContent).toBe('yes');
+
+    // Switch to serviceB (e.g. different user session after sign-out/sign-in).
+    // The provider must reload even though initialSnapshot was provided on mount.
+    rerender(
+      <EntitlementsProvider service={serviceB}>
+        <FeatureProbe name="crm.export" />
+      </EntitlementsProvider>
+    );
+
+    // After loading completes for serviceB (same plan), should still show 'yes'.
+    await waitFor(() => expect(screen.getByTestId('feature:crm.export').textContent).toBe('yes'));
   });
 });

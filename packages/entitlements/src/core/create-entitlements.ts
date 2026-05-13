@@ -1,11 +1,12 @@
 import { CaslAuthorizationEngine } from '../adapters/authorization/casl-engine';
 import type { AuthorizationEngine } from '../adapters/authorization/interface';
 import type { SubscriptionPersistenceAdapter } from '../adapters/persistence/interface';
+import { parseActiveSubscription } from '../validation/schemas';
 import { MemoryCache } from './cache';
 import type { CacheAdapter } from './cache';
 import { CoreEntitlementsService } from './entitlements-service';
 import type { EntitlementsService } from './entitlements-service';
-import { InvalidInputError } from './errors';
+import { InvalidInputError, PlanNotFoundError } from './errors';
 import type {
   ActiveSubscription,
   EntitlementsContext,
@@ -21,10 +22,36 @@ export interface EntitlementsConfig {
   authorization?: AuthorizationEngine;
   /** Defaults to `MemoryCache` with 5s TTL. */
   cache?: CacheAdapter;
-  /** Cache TTL applied per resolved state. Default `5_000`. `0` disables caching. */
+  /**
+   * Cache TTL applied per resolved state. Default `5_000` ms. `0` disables caching.
+   *
+   * @remarks
+   * The default `MemoryCache` is **process-local**. In multi-process / multi-pod
+   * environments, each instance caches independently, so entitlement changes
+   * propagate only after this TTL expires **per process**. Use `cacheTtlMs: 0`
+   * for high-value gates, or supply a shared `CacheAdapter` (e.g. Redis).
+   */
   cacheTtlMs?: number;
   /** Plan returned for users with no active subscription (e.g. anonymous / free tier). */
   fallbackPlan?: PlanDefinition;
+  /**
+   * When `planResolver` returns `null` for an active subscription's `planId`,
+   * fall back to the entitlements snapshot stored in the subscription row.
+   *
+   * **Security warning:** Only enable if you fully control and trust the
+   * integrity of your persistence layer. When disabled (the default),
+   * a missing plan throws `PlanNotFoundError`, preventing stale or tampered
+   * snapshots from granting unauthorised access.
+   *
+   * **Soft-revoke pattern (L1):** Instead of returning `null` for a deleted or
+   * discontinued plan, have your `planResolver` return a plan object with an
+   * empty `features` map — e.g. `{ id, name, features: {} }`. This silently
+   * revokes all entitlements without throwing `PlanNotFoundError`, and works
+   * regardless of whether `planSnapshotFallback` is enabled.
+   *
+   * @default false
+   */
+  planSnapshotFallback?: boolean;
   logger?: Logger;
 }
 
@@ -64,6 +91,7 @@ export function createEntitlements(config: EntitlementsConfig): Entitlements {
     authorization: config.authorization ?? new CaslAuthorizationEngine(),
     cache: config.cache ?? new MemoryCache(),
     cacheTtlMs: config.cacheTtlMs ?? 5_000,
+    planSnapshotFallback: config.planSnapshotFallback ?? false,
     ...(config.logger ? { logger: config.logger } : {}),
     ...(config.fallbackPlan ? { fallbackPlan: config.fallbackPlan } : {})
   } satisfies Entitlements['config'];
@@ -86,6 +114,7 @@ export function createEntitlements(config: EntitlementsConfig): Entitlements {
           authorization: resolved.authorization,
           cache: resolved.cache,
           cacheTtlMs: resolved.cacheTtlMs,
+          planSnapshotFallback: resolved.planSnapshotFallback,
           ...(resolved.logger ? { logger: resolved.logger } : {}),
           ...(resolved.fallbackPlan ? { fallbackPlan: resolved.fallbackPlan } : {})
         });
@@ -95,10 +124,26 @@ export function createEntitlements(config: EntitlementsConfig): Entitlements {
     },
 
     async saveSubscription(subscription) {
-      await resolved.persistence.saveSubscription(subscription);
+      // 1. Validate shape at the engine boundary – rejects unknown fields and
+      //    bad types before anything is persisted.
+      const parsed = parseActiveSubscription(subscription);
+
+      // 2. Re-resolve entitlements from the authoritative plan catalog.
+      //    Caller-supplied entitlements are deliberately ignored so that a
+      //    crafted webhook payload cannot elevate a user's privileges.
+      const plan = await resolved.planResolver(parsed.planId);
+      if (!plan) {
+        throw new PlanNotFoundError(parsed.planId);
+      }
+
+      // 3. Persist with plan-derived features only (treat the column as a
+      //    display cache, not an authoritative grants store).
+      const safeSubscription: ActiveSubscription = { ...parsed, entitlements: plan.features };
+      await resolved.persistence.saveSubscription(safeSubscription);
+
       const ctx: EntitlementsContext = {
-        userId: subscription.userId,
-        ...(subscription.tenantId ? { tenantId: subscription.tenantId } : {})
+        userId: safeSubscription.userId,
+        ...(safeSubscription.tenantId ? { tenantId: safeSubscription.tenantId } : {})
       };
       const svc = services.get(keyFor(ctx));
       if (svc) await svc.invalidate();

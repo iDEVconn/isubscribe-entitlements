@@ -2,13 +2,13 @@
 
 Five levels of testing, ordered from quickest to most realistic. Pick whichever you need.
 
-| Level | Proves                                                                                                                        |
-| ----- | ----------------------------------------------------------------------------------------------------------------------------- |
-| 1     | Engine logic, status gating, metered increments, error mapping, React hooks, Nest guard mapping, SSR snapshot path            |
-| 2     | Real Express + Nest + decorator + guard + interceptor pipeline; HTTP status codes; `x-user-id`/`x-tenant-id` context resolver |
-| 3     | Real React 19 provider, hooks, `<Feature>`/`<LockedFeature>`, reactive consume → re-render                                    |
-| 4     | The published artifacts (`dist/*.mjs` + `dist/*.js`) actually work standalone                                                 |
-| 5     | The packaged tarball — `exports`, `peerDependenciesMeta`, `files`, `prepack` doc-sync — works for an outside consumer         |
+| Level | Proves                                                                                                                       |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------- |
+| 1     | Engine logic, status gating, metered increments, error mapping, React hooks, Nest guard mapping, SSR snapshot path           |
+| 2     | Real Nest pipeline; HTTP codes; example API uses `unsafeHeaderBasedEntitlementsContextResolver` for header-based `curl` only |
+| 3     | Real React 19 provider, hooks, `<Feature>`/`<LockedFeature>`, reactive consume → re-render                                   |
+| 4     | The published artifacts (`dist/*.mjs` + `dist/*.js`) actually work standalone                                                |
+| 5     | The packaged tarball — `exports`, `peerDependenciesMeta`, `files`, `prepack` doc-sync — works for an outside consumer        |
 
 All commands assume you start at the repo root:
 
@@ -21,8 +21,8 @@ cd /Users/kudenv/pr/www/cvrnd/mm_analitics/isubscribe-entitlements
 ## Level 1 — Automated tests
 
 ```bash
-npm run -w @idevconn/entitlements test           # 58/58 pass
-npm run -w @idevconn/entitlements test:coverage  # with coverage report
+npm run -w @idevconn/isubscribe-entitlements test           # integration included
+npm run -w @idevconn/isubscribe-entitlements test:coverage  # with coverage report
 ```
 
 Coverage HTML lands at `packages/entitlements/coverage/index.html`.
@@ -42,6 +42,10 @@ npm run build
 ## Level 2 — Exercise the live NestJS demo
 
 Boots `example-nest-api` on port 3000 and seeds a `demo` user with the Pro plan.
+
+The demo opts into `unsafeHeaderBasedEntitlementsContextResolver` so `curl` can pass
+`x-user-id`. **Production apps must not do this** — use the default resolver and
+populate `req.user` from a verified JWT/session.
 
 ```bash
 cp apps/example-nest-api/.env.example apps/example-nest-api/.env
@@ -102,7 +106,8 @@ curl -si -H "x-user-id: bob" http://localhost:3000/me/usage/ai.tokens.monthly
 curl -si -H "x-user-id: stranger" http://localhost:3000/crm/export
 # → 403 {"code":"ENTITLEMENT_DENIED",...}
 
-# 401: no x-user-id, can't resolve context
+# 401: protected routes with no identity (example uses unsafe header resolver for curl;
+#       without x-user-id the guard cannot resolve context). `/me` likewise requires the header in this demo.
 curl -si http://localhost:3000/crm/export
 # → 401
 

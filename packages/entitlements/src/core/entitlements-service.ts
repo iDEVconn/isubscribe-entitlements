@@ -7,6 +7,7 @@ import {
   NoActiveSubscriptionError,
   PlanNotFoundError
 } from './errors';
+export { PlanNotFoundError };
 import type {
   ActivePlan,
   ActiveSubscription,
@@ -41,6 +42,18 @@ export interface EntitlementsServiceDeps {
   cache: CacheAdapter;
   fallbackPlan?: PlanDefinition;
   cacheTtlMs?: number;
+  /**
+   * When `planResolver` returns `null`, use the `entitlements` snapshot stored
+   * in the subscription row as the plan features.
+   *
+   * **Security warning:** This opt-in exists only for backward compatibility.
+   * Stored entitlements can be manipulated by callers who bypass the
+   * `saveSubscription` facade. Keep this `false` (the default) unless you
+   * have an explicit need and trust your persistence layer completely.
+   *
+   * @default false
+   */
+  planSnapshotFallback?: boolean;
   logger?: Logger;
 }
 
@@ -120,6 +133,15 @@ export class CoreEntitlementsService implements EntitlementsService {
 
     const limit = rules.limit(feature);
     if (limit !== null && limit !== undefined) {
+      // Use the capped atomic RPC when the adapter supports it (M2: eliminates
+      // the TOCTOU race between getUsage + incrementUsage under concurrency).
+      if (this.deps.persistence.incrementUsageCapped) {
+        await this.deps.persistence.incrementUsageCapped(this.deps.context, feature, amount, limit);
+        await this.deps.cache.delete(this.resolvedKey());
+        return;
+      }
+      // Non-atomic fallback path: check-then-increment (subject to TOCTOU race).
+      // Replace the adapter's `incrementUsage` with a capped RPC to eliminate it.
       const used = await this.deps.persistence.getUsage(this.deps.context, feature);
       if (used + amount > limit) {
         throw new LimitExceededError(feature, limit, used, amount);
@@ -174,16 +196,28 @@ export class CoreEntitlementsService implements EntitlementsService {
       if (live) {
         return { ...live, source: 'subscription' };
       }
-      // Live lookup failed: fall back to the snapshot stored on the subscription.
-      this.deps.logger?.warn?.('plan resolver returned null; using subscription snapshot', {
-        planId: subscription.planId
-      });
-      return {
-        id: subscription.planId,
-        name: subscription.planId,
-        features: subscription.entitlements,
-        source: 'subscription'
-      };
+      // Live lookup returned null — the plan no longer exists in the catalog.
+      if (this.deps.planSnapshotFallback) {
+        // Explicit opt-in: use the cached snapshot (backward-compat escape hatch).
+        // WARNING: stored entitlements can be tampered with if saveSubscription is
+        // bypassed. Only enable when the persistence layer is fully trusted.
+        this.deps.logger?.warn?.(
+          'plan resolver returned null; falling back to subscription snapshot (planSnapshotFallback is enabled)',
+          { planId: subscription.planId }
+        );
+        return {
+          id: subscription.planId,
+          name: subscription.planId,
+          features: subscription.entitlements,
+          source: 'subscription'
+        };
+      }
+      // Default (safe): refuse to grant access from an unresolvable plan.
+      this.deps.logger?.error?.(
+        'plan resolver returned null and planSnapshotFallback is disabled; denying access',
+        { planId: subscription.planId }
+      );
+      throw new PlanNotFoundError(subscription.planId);
     }
 
     if (this.deps.fallbackPlan) {
@@ -216,5 +250,3 @@ export class CoreEntitlementsService implements EntitlementsService {
     return tenantId ? { userId, tenantId } : { userId };
   }
 }
-
-export { PlanNotFoundError };

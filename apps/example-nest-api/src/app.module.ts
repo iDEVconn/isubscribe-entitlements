@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
 
-import { EntitlementsModule } from '@idevconn/isubscribe-entitlements/nest';
+import {
+  EntitlementsModule,
+  unsafeHeaderBasedEntitlementsContextResolver
+} from '@idevconn/isubscribe-entitlements/nest';
 import { createMemoryAdapter } from '@idevconn/isubscribe-entitlements/adapters/persistence/memory';
 
 import { CrmController } from './crm.controller';
@@ -43,6 +46,8 @@ void persistence.saveSubscription({
         planResolver,
         fallbackPlan: PLANS.free
       },
+      /** Demo only: trust x-user-id for curl. Production apps must use default + AuthGuard. */
+      contextResolver: unsafeHeaderBasedEntitlementsContextResolver,
       isGlobal: true
     })
   ],

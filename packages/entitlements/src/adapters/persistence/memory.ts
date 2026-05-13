@@ -47,6 +47,18 @@ export class MemoryPersistenceAdapter implements SubscriptionPersistenceAdapter 
     this.usage.set(key, (this.usage.get(key) ?? 0) + amount);
   }
 
+  /**
+   * Optional capped increment — not implemented by default (falls back to the
+   * non-atomic path in `consume()`). Tests can monkey-patch this property to
+   * simulate the presence of the capped RPC.
+   */
+  incrementUsageCapped?: (
+    ctx: EntitlementsContext,
+    metric: string,
+    amount: number,
+    limit: number
+  ) => Promise<void>;
+
   async resetUsage(ctx: EntitlementsContext, metric: string): Promise<void> {
     this.usage.delete(composeUsageKey(ctx, metric));
   }

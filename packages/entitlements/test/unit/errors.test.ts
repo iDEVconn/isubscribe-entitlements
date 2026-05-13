@@ -48,3 +48,40 @@ describe('EntitlementsError hierarchy', () => {
     expect(err.statusCode).toBe(403);
   });
 });
+
+describe('toResponseBody verbose flag (L2 — error detail exposure)', () => {
+  it('includes details by default (verbose=true)', () => {
+    const err = new NoActiveSubscriptionError('u-1', 't-1');
+    const body = err.toResponseBody();
+    expect(body.details).toBeDefined();
+    expect((body.details as Record<string, unknown>).userId).toBe('u-1');
+  });
+
+  it('omits details when verbose=false', () => {
+    const err = new NoActiveSubscriptionError('u-1', 't-1');
+    const body = err.toResponseBody(false);
+    expect(body.code).toBe('NO_ACTIVE_SUBSCRIPTION');
+    expect(body.message).toBeDefined();
+    expect(body.details).toBeUndefined();
+  });
+
+  it('omits details from LimitExceededError when verbose=false', () => {
+    const err = new LimitExceededError('ai.tokens.monthly', 100, 80, 30);
+    const body = err.toResponseBody(false);
+    expect(body.code).toBe('LIMIT_EXCEEDED');
+    expect(body.message).toBeDefined();
+    expect(body.details).toBeUndefined();
+  });
+
+  it('omits details from EntitlementDeniedError when verbose=false', () => {
+    const err = new EntitlementDeniedError('crm.export');
+    const body = err.toResponseBody(false);
+    expect(body.code).toBe('ENTITLEMENT_DENIED');
+    expect(body.details).toBeUndefined();
+  });
+
+  it('explicit verbose=true behaves identically to the default', () => {
+    const err = new LimitExceededError('x', 10, 5, 6);
+    expect(err.toResponseBody(true)).toEqual(err.toResponseBody());
+  });
+});

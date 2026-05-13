@@ -71,7 +71,7 @@ src/
 │   ├── entitlements.guard.ts       EntitlementsGuard (global by default)
 │   ├── consume-on-success.interceptor.ts
 │   ├── require-subscription.decorator.ts
-│   └── entitlements-context.ts     EntitlementsContextResolver (default + override)
+│   └── entitlements-context.ts     default (secure) + unsafeHeaderBased* for demos/tests
 └── validation/schemas.ts           zod parsers for ActiveSubscription / PlanDefinition
 ```
 
@@ -260,8 +260,9 @@ not raw rows; the engine never has to compile twice within a window.
 ## 8. Multi-tenant guidance
 
 Every `EntitlementsContext` carries an optional `tenantId`. All shipped adapters
-include it in their composite keys. The Nest context resolver pulls it from
-`req.user.tenantId` or the `x-tenant-id` header by default.
+include it in their composite keys. The Nest **default** context resolver reads
+`tenantId` only from `req.user.tenantId` (never from headers). For header-driven
+demos, `unsafeHeaderBasedEntitlementsContextResolver` also reads `x-tenant-id`.
 
 For B2B SaaS where a single user belongs to multiple workspaces, build a fresh
 context (and therefore a fresh service) per request.

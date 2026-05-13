@@ -1,3 +1,15 @@
+# Changelog
+
+## Unreleased
+
+### Breaking Changes
+
+- **NestJS:** `defaultEntitlementsContextResolver` no longer reads `x-user-id` /
+  `x-tenant-id` headers (they were spoofable). Identity must come from `req.user`
+  or `req.entitlementsContext` after authentication. For local demos and tests,
+  pass `unsafeHeaderBasedEntitlementsContextResolver` explicitly via
+  `EntitlementsModule.forRoot({ contextResolver })`.
+
 # 1.0.0 (2026-05-09)
 
 ### Features

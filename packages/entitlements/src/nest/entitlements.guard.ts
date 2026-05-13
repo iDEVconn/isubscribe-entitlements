@@ -24,8 +24,12 @@ import type { RequireSubscriptionMetadata } from './require-subscription.decorat
 import {
   ENTITLEMENTS,
   ENTITLEMENTS_CONTEXT_RESOLVER,
+  ENTITLEMENTS_DEFAULT_POLICY,
+  ENTITLEMENTS_EXPOSE_ERROR_DETAILS,
+  ENTITLEMENTS_RESOLVED_CTX_KEY,
   REQUIRE_SUBSCRIPTION_METADATA
 } from './tokens';
+import { PUBLIC_ENTITLEMENT_METADATA } from './tokens';
 
 /**
  * Global guard that enforces `@RequireSubscription(...)` on Nest routes.
@@ -43,7 +47,11 @@ export class EntitlementsGuard implements CanActivate {
     @Inject(Reflector) private readonly reflector: Reflector,
     @Inject(ENTITLEMENTS) private readonly handle: Entitlements,
     @Inject(ENTITLEMENTS_CONTEXT_RESOLVER)
-    private readonly resolveContext: EntitlementsContextResolver = defaultEntitlementsContextResolver
+    private readonly resolveContext: EntitlementsContextResolver = defaultEntitlementsContextResolver,
+    @Inject(ENTITLEMENTS_DEFAULT_POLICY)
+    private readonly defaultPolicy: 'deny' | 'allow' = 'allow',
+    @Inject(ENTITLEMENTS_EXPOSE_ERROR_DETAILS)
+    private readonly exposeErrorDetails = true
   ) {}
 
   async canActivate(execContext: ExecutionContext): Promise<boolean> {
@@ -51,7 +59,18 @@ export class EntitlementsGuard implements CanActivate {
       REQUIRE_SUBSCRIPTION_METADATA,
       [execContext.getHandler(), execContext.getClass()]
     );
-    if (!meta) return true;
+    if (!meta) {
+      if (this.defaultPolicy === 'allow') return true;
+      // deny mode: allow only routes explicitly opted out with @PublicEntitlement()
+      const isPublic = this.reflector.getAllAndOverride<boolean | undefined>(
+        PUBLIC_ENTITLEMENT_METADATA,
+        [execContext.getHandler(), execContext.getClass()]
+      );
+      if (isPublic) return true;
+      throw new ForbiddenException(
+        'This route has no entitlement decorator. Apply @RequireSubscription() or @PublicEntitlement().'
+      );
+    }
 
     const ctx = await this.resolveContext(execContext);
     if (!ctx) {
@@ -59,6 +78,11 @@ export class EntitlementsGuard implements CanActivate {
         'Unable to resolve entitlements context for the current request'
       );
     }
+
+    // Share the resolved identity with ConsumeOnSuccessInterceptor so both
+    // stages use exactly the same context without resolving it twice.
+    const req = execContext.switchToHttp().getRequest<Record<string | symbol, unknown>>();
+    req[ENTITLEMENTS_RESOLVED_CTX_KEY] = ctx;
 
     const service = this.handle.for(ctx);
 
@@ -89,7 +113,7 @@ export class EntitlementsGuard implements CanActivate {
 
       return true;
     } catch (err) {
-      throw mapError(err);
+      throw mapError(err, this.exposeErrorDetails);
     }
   }
 }
@@ -102,17 +126,17 @@ function collectFeatures(meta: RequireSubscriptionMetadata): string[] {
   return Array.from(buf);
 }
 
-function mapError(err: unknown): unknown {
+function mapError(err: unknown, verbose: boolean): unknown {
   if (err instanceof NoActiveSubscriptionError) {
     // Nest does not ship a `PaymentRequiredException`; emit a typed HttpException
     // with the standard 402 status so consumers can match on status code or body.
-    return new HttpException(err.toResponseBody(), HttpStatus.PAYMENT_REQUIRED);
+    return new HttpException(err.toResponseBody(verbose), HttpStatus.PAYMENT_REQUIRED);
   }
   if (err instanceof LimitExceededError || err instanceof EntitlementDeniedError) {
-    return new ForbiddenException(err.toResponseBody());
+    return new ForbiddenException(err.toResponseBody(verbose));
   }
   if (err instanceof EntitlementsError) {
-    return new ForbiddenException(err.toResponseBody());
+    return new ForbiddenException(err.toResponseBody(verbose));
   }
   return err;
 }

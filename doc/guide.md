@@ -341,15 +341,19 @@ app.useGlobalInterceptors(new ConsumeOnSuccessInterceptor(reflector, handle, res
 
 **Status codes you get for free:**
 
-| Situation                                                      | HTTP                           |
-| -------------------------------------------------------------- | ------------------------------ |
-| no `x-user-id` header (or your custom resolver returns `null`) | 401                            |
-| no active subscription **and** no fallback plan                | 402                            |
-| feature explicitly denied by current plan                      | 403                            |
-| metered feature over limit                                     | 403 with `LIMIT_EXCEEDED` body |
+| Situation                                           | HTTP                           |
+| --------------------------------------------------- | ------------------------------ |
+| no authenticated identity (resolver returns `null`) | 401                            |
+| no active subscription **and** no fallback plan     | 402                            |
+| feature explicitly denied by current plan           | 403                            |
+| metered feature over limit                          | 403 with `LIMIT_EXCEEDED` body |
 
-The default context resolver reads `x-user-id` / `x-tenant-id` headers — swap
-in your own (e.g. JWT, session) by overriding `ENTITLEMENTS_CONTEXT_RESOLVER`.
+The **default** context resolver uses only `req.user` (after your auth guard)
+and optional `req.entitlementsContext`. It never trusts `x-user-id` /
+`x-tenant-id`, because clients can forge those. For local `curl` demos and
+tests you may pass `unsafeHeaderBasedEntitlementsContextResolver` explicitly on
+`EntitlementsModule.forRoot({ contextResolver: ... })` — never in production.
+Replace with your own resolver if you need a different shape than `req.user`.
 
 See [`apps/example-nest-api`](../apps/example-nest-api) for the full
 reference implementation.
@@ -644,7 +648,7 @@ createEntitlements({
 EntitlementsModule.forRoot({
   config, // same shape as createEntitlements
   isGlobal: true, // default false
-  contextResolver // optional — replaces header-based default
+  contextResolver // optional — defaults to secure resolver (req.user only)
 });
 ```
 
@@ -677,6 +681,10 @@ EntitlementsModule.forRoot({
 - **Reading `service.consume` from React.** `<Feature>` and the hooks read.
   For metered burns, call `service.consume(...)` from an event handler — the
   provider auto-refreshes the snapshot afterwards.
+- **Nest header spoofing.** Do not use `unsafeHeaderBasedEntitlementsContextResolver`
+  in production — anyone can send `x-user-id` and impersonate another user or burn
+  their metered quota. Use `defaultEntitlementsContextResolver` and populate `req.user`
+  from a verified JWT/session.
 - **Atomicity in custom adapters.** Implement `incrementUsage` with an atomic
   SQL `UPDATE ... SET used = used + ?` (or equivalent). Read-then-write will
   silently lose tokens at scale.

@@ -52,7 +52,7 @@ with a deliberately small surface.
   interface yourself.
 - CASL is hidden behind the public API — your product code never imports it.
 - Strict TypeScript, dual ESM/CJS, tree-shakable, multi-tenant ready, cache
-  built in, 58 tests, Apache-2.0.
+  built in, integration-tested Nest guard suite, Apache-2.0.
 
 ---
 
@@ -187,15 +187,23 @@ configuration knobs) see [`doc/guide.md`](./doc/guide.md).
 
 ## Main entry points
 
-| Import                                                 | What it gives you                                                                                                 |
-| ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
-| `@idevconn/entitlements`                               | `createEntitlements`, `EntitlementsService`, all types and error classes                                          |
-| `@idevconn/entitlements/react`                         | `<EntitlementsProvider>`, `<Feature>`, `<LockedFeature>`, `useSubscription`, `useFeature`, `useLimit`, `useUsage` |
-| `@idevconn/entitlements/nest`                          | `EntitlementsModule`, `@RequireSubscription`, `EntitlementsGuard`, `ConsumeOnSuccessInterceptor`, DI tokens       |
-| `@idevconn/entitlements/adapters/persistence/memory`   | `createMemoryAdapter` — single-process, for tests/demos                                                           |
-| `@idevconn/entitlements/adapters/persistence/prisma`   | `createPrismaAdapter` — atomic counters via `update increment`                                                    |
-| `@idevconn/entitlements/adapters/persistence/supabase` | `createSupabaseAdapter` — atomic counters via Postgres RPC                                                        |
-| `@idevconn/entitlements/adapters/persistence/typeorm`  | `createTypeOrmAdapter` — atomic counters via `Repository.increment`                                               |
+| Import                                                 | What it gives you                                                                                                                                                                                 |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@idevconn/entitlements`                               | `createEntitlements`, `EntitlementsService`, all types and error classes                                                                                                                          |
+| `@idevconn/entitlements/react`                         | `<EntitlementsProvider>`, `<Feature>`, `<LockedFeature>`, `useSubscription`, `useFeature`, `useLimit`, `useUsage`                                                                                 |
+| `@idevconn/entitlements/nest`                          | `EntitlementsModule`, `@RequireSubscription`, `EntitlementsGuard`, `ConsumeOnSuccessInterceptor`, `defaultEntitlementsContextResolver`, `unsafeHeaderBasedEntitlementsContextResolver`, DI tokens |
+| `@idevconn/entitlements/adapters/persistence/memory`   | `createMemoryAdapter` — single-process, for tests/demos                                                                                                                                           |
+| `@idevconn/entitlements/adapters/persistence/prisma`   | `createPrismaAdapter` — atomic counters via `update increment`                                                                                                                                    |
+| `@idevconn/entitlements/adapters/persistence/supabase` | `createSupabaseAdapter` — atomic counters via Postgres RPC                                                                                                                                        |
+| `@idevconn/entitlements/adapters/persistence/typeorm`  | `createTypeOrmAdapter` — atomic counters via `Repository.increment`                                                                                                                               |
+
+### NestJS identity and security
+
+The **default** context resolver never reads `x-user-id` / `x-tenant-id`. Identity
+must come from `req.user` (after your auth guard) or `req.entitlementsContext`.
+
+The runnable example API passes `unsafeHeaderBasedEntitlementsContextResolver`
+only so `curl` recipes work without JWT wiring — never copy that into production.
 
 ---
 

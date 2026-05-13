@@ -66,10 +66,37 @@ export function EntitlementsProvider({
     }
   }, [service]);
 
+  // isFirstEffect tracks whether this is the initial mount so we can handle
+  // SSR hydration (skip load) vs. service-change (reset + load) correctly.
+  const isFirstEffect = useRef(true);
   useEffect(() => {
-    if (initialSnapshot) return;
+    const first = isFirstEffect.current;
+    isFirstEffect.current = false;
+
+    if (first) {
+      // Initial mount: when an SSR snapshot was provided, skip the first fetch
+      // to avoid a hydration flash. The snapshot is already in state.
+      if (initialSnapshot) return;
+    } else {
+      // `load` changed identity because `service` changed (e.g. a different
+      // authenticated user). Clear stale entitlements synchronously so that
+      // hooks like useFeature never return data belonging to the previous user.
+      setSnapshot({
+        status: 'idle',
+        subscription: null,
+        plan: null,
+        entitlements: {},
+        error: null
+      });
+    }
+
     void load();
-  }, [initialSnapshot, load]);
+    // `load` is the only dep we need: it gets a new reference whenever
+    // `service` changes (its useCallback dep), which re-triggers this effect.
+    // `initialSnapshot` is intentionally consumed only on the first run (via
+    // the isFirstEffect ref) and does not need to trigger re-loading if it
+    // changes at runtime (it is an SSR-only prop).
+  }, [load]);
 
   const value = useMemo(() => ({ service, snapshot, refresh: load }), [service, snapshot, load]);
 

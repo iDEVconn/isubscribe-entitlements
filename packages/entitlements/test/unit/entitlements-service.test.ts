@@ -5,7 +5,8 @@ import { createEntitlements } from '../../src/core/create-entitlements';
 import {
   EntitlementDeniedError,
   LimitExceededError,
-  NoActiveSubscriptionError
+  NoActiveSubscriptionError,
+  PlanNotFoundError
 } from '../../src/core/errors';
 import { ACTIVE_SUB, CANCELED_SUB, FREE_PLAN, PRO_PLAN, planResolver } from '../fixtures';
 
@@ -149,13 +150,28 @@ describe('EntitlementsService (core)', () => {
     await expect(svc.has('crm.export')).resolves.toBe(true);
   });
 
-  it('falls back to subscription snapshot when planResolver returns null', async () => {
-    await adapter.saveSubscription({ ...ACTIVE_SUB, planId: 'unknown_plan' });
-    const ent = createEntitlements({ persistence: adapter, planResolver });
+  it('throws PlanNotFoundError when planResolver returns null (default safe behaviour)', async () => {
+    // Seed the adapter directly so we can test resolvePlan with an unresolvable planId
+    await adapter.saveSubscription({ ...ACTIVE_SUB, planId: 'deleted_plan' });
+    const svc = createEntitlements({ persistence: adapter, planResolver }).for({
+      userId: ACTIVE_SUB.userId
+    });
+
+    await expect(svc.has('crm.export')).rejects.toBeInstanceOf(PlanNotFoundError);
+    await expect(svc.getPlan()).rejects.toBeInstanceOf(PlanNotFoundError);
+  });
+
+  it('falls back to snapshot when planResolver returns null and planSnapshotFallback is true', async () => {
+    await adapter.saveSubscription({ ...ACTIVE_SUB, planId: 'legacy_plan' });
+    const ent = createEntitlements({
+      persistence: adapter,
+      planResolver,
+      planSnapshotFallback: true
+    });
     const svc = ent.for({ userId: ACTIVE_SUB.userId });
 
     const plan = await svc.getPlan();
-    expect(plan.id).toBe('unknown_plan');
+    expect(plan.id).toBe('legacy_plan');
     expect(plan.source).toBe('subscription');
     expect(plan.features).toEqual(ACTIVE_SUB.entitlements);
   });
@@ -187,5 +203,94 @@ describe('EntitlementsService (core)', () => {
       userId: ACTIVE_SUB.userId
     });
     await expect(svc.getEntitlements()).resolves.toEqual(PRO_PLAN.features);
+  });
+});
+
+describe('consume() — incrementUsageCapped (M2)', () => {
+  it('calls incrementUsageCapped when the adapter provides it', async () => {
+    const cappedAdapter = createMemoryAdapter();
+    await cappedAdapter.saveSubscription(ACTIVE_SUB);
+
+    const cappedCalls: { metric: string; amount: number; limit: number }[] = [];
+    cappedAdapter.incrementUsageCapped = async (ctx, metric, amount, limit) => {
+      cappedCalls.push({ metric, amount, limit });
+      await cappedAdapter.incrementUsage(ctx, metric, amount);
+    };
+
+    const svc = createEntitlements({ persistence: cappedAdapter, planResolver }).for({
+      userId: ACTIVE_SUB.userId
+    });
+
+    await svc.consume('ai.tokens.monthly', 1_000);
+
+    expect(cappedCalls).toHaveLength(1);
+    expect(cappedCalls[0]).toMatchObject({
+      metric: 'ai.tokens.monthly',
+      amount: 1_000,
+      limit: 100_000
+    });
+    await expect(
+      cappedAdapter.getUsage({ userId: ACTIVE_SUB.userId }, 'ai.tokens.monthly')
+    ).resolves.toBe(1_000);
+  });
+
+  it('does not call incrementUsageCapped when adapter does not provide it', async () => {
+    // Standard MemoryPersistenceAdapter has no incrementUsageCapped — the
+    // non-atomic fallback path should be used transparently.
+    const fallbackAdapter = createMemoryAdapter();
+    await fallbackAdapter.saveSubscription(ACTIVE_SUB);
+    expect(fallbackAdapter.incrementUsageCapped).toBeUndefined();
+
+    const svc = createEntitlements({ persistence: fallbackAdapter, planResolver }).for({
+      userId: ACTIVE_SUB.userId
+    });
+
+    await svc.consume('ai.tokens.monthly', 2_000);
+    await expect(
+      fallbackAdapter.getUsage({ userId: ACTIVE_SUB.userId }, 'ai.tokens.monthly')
+    ).resolves.toBe(2_000);
+  });
+
+  it('propagates LimitExceededError thrown by incrementUsageCapped', async () => {
+    const cappedAdapter = createMemoryAdapter();
+    await cappedAdapter.saveSubscription(ACTIVE_SUB);
+
+    cappedAdapter.incrementUsageCapped = async () => {
+      // Simulate DB-side cap enforcement rejecting the increment
+      throw new LimitExceededError('ai.tokens.monthly', 100_000, 99_500, 1_000);
+    };
+
+    const svc = createEntitlements({ persistence: cappedAdapter, planResolver }).for({
+      userId: ACTIVE_SUB.userId
+    });
+
+    await expect(svc.consume('ai.tokens.monthly', 1_000)).rejects.toBeInstanceOf(
+      LimitExceededError
+    );
+  });
+
+  it('skips the non-atomic getUsage check when incrementUsageCapped is present', async () => {
+    const cappedAdapter = createMemoryAdapter();
+    await cappedAdapter.saveSubscription(ACTIVE_SUB);
+
+    let getUsageCalled = false;
+    const originalGetUsage = cappedAdapter.getUsage.bind(cappedAdapter);
+    cappedAdapter.getUsage = async (ctx, metric) => {
+      getUsageCalled = true;
+      return originalGetUsage(ctx, metric);
+    };
+    cappedAdapter.incrementUsageCapped = async (ctx, metric, amount) => {
+      await cappedAdapter.incrementUsage(ctx, metric, amount);
+    };
+
+    const svc = createEntitlements({ persistence: cappedAdapter, planResolver }).for({
+      userId: ACTIVE_SUB.userId
+    });
+
+    await svc.consume('ai.tokens.monthly', 500);
+
+    // getUsage should not have been called for the limit check because the
+    // capped RPC path handles it atomically inside the DB.
+    expect(getUsageCalled).toBe(false);
   });
 });

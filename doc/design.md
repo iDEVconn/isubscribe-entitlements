@@ -431,11 +431,14 @@ The NestJS surface is intentionally small:
 - An optional interceptor that consumes metered budget only after a
   successful response, so a failed handler never burns quota.
 
-The context resolver is pluggable. The default reads the user id from
-`req.user`, common JWT claim shapes, or `x-user-id` / `x-tenant-id` headers
-(useful in development and end-to-end tests). Real applications can replace
-it with one line, plugging in Passport, Clerk, Auth0, or whatever auth
-strategy is in use.
+The context resolver is pluggable. The **default** resolves identity only from
+`req.user` (`id`, `userId`, `sub`) and `req.user.tenantId`, or from an explicit
+`req.entitlementsContext` your middleware sets after verifying the session. It
+does **not** read `x-user-id` / `x-tenant-id` headers (those are trivially
+spoofable). For development demos and automated tests the package exports
+`unsafeHeaderBasedEntitlementsContextResolver`, which restores header fallback;
+that export must never be used in production. Real applications typically keep
+the default and ensure their `AuthGuard` populates `req.user`.
 
 ---
 
