@@ -46,7 +46,7 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run test
-      - run: npm run build -w @isubscribe/entitlements
+      - run: npm run build -w @idevconn/isubscribe-entitlements
 
       - name: Run semantic-release (version + changelog + tag, no publish)
         run: npx semantic-release
