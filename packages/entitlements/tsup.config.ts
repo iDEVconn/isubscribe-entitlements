@@ -5,6 +5,7 @@ export default defineConfig({
     index: 'src/index.ts',
     'react/index': 'src/react/index.ts',
     'nest/index': 'src/nest/index.ts',
+    'nest/supabase/index': 'src/nest/supabase/index.ts',
     'adapters/persistence/memory': 'src/adapters/persistence/memory.ts',
     'adapters/persistence/prisma': 'src/adapters/persistence/prisma.ts',
     'adapters/persistence/supabase': 'src/adapters/persistence/supabase.ts',

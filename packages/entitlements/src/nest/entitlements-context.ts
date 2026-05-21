@@ -21,6 +21,16 @@ export type EntitlementsContextResolver = (
   context: ExecutionContext
 ) => EntitlementsContext | null | Promise<EntitlementsContext | null>;
 
+/**
+ * Interface that class-based context resolvers must implement to participate
+ * in NestJS dependency injection context resolution.
+ */
+export interface NestEntitlementsContextResolver {
+  resolve(
+    context: ExecutionContext
+  ): EntitlementsContext | null | Promise<EntitlementsContext | null>;
+}
+
 interface RequestLike {
   entitlementsContext?: EntitlementsContext;
   user?: {

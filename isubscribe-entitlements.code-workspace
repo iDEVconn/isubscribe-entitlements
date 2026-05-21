@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../payPal-npm"
+		},
+		{
+			"path": "../isubscribe-widget-react"
+		}
+	]
+}

@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import type { DynamicModule, Provider, Type } from '@nestjs/common';
+import type { DynamicModule, Provider, Type, ExecutionContext } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 
 import {
@@ -10,7 +10,8 @@ import {
 import { EntitlementsGuard } from './entitlements.guard';
 import {
   defaultEntitlementsContextResolver,
-  type EntitlementsContextResolver
+  type EntitlementsContextResolver,
+  type NestEntitlementsContextResolver
 } from './entitlements-context';
 import {
   ENTITLEMENTS,
@@ -33,7 +34,7 @@ export interface EntitlementsModuleOptions {
    * For header-driven demos/tests, pass `unsafeHeaderBasedEntitlementsContextResolver`
    * explicitly — never in production.
    */
-  contextResolver?: EntitlementsContextResolver;
+  contextResolver?: EntitlementsContextResolver | Type<NestEntitlementsContextResolver> | undefined;
   /**
    * Register `EntitlementsGuard` as a global guard. Default `true` so that
    * `@RequireSubscription(...)` works out of the box.
@@ -96,10 +97,22 @@ export class EntitlementsModule {
       ...(options.useFactory && options.inject ? { inject: options.inject } : {})
     };
 
-    const contextResolverProvider: Provider = {
-      provide: ENTITLEMENTS_CONTEXT_RESOLVER,
-      useValue: options.contextResolver ?? defaultEntitlementsContextResolver
-    };
+    const isResolverClass =
+      typeof options.contextResolver === 'function' &&
+      /^\s*class\s+/.test(options.contextResolver.toString());
+
+    const contextResolverProvider: Provider = isResolverClass
+      ? {
+          provide: ENTITLEMENTS_CONTEXT_RESOLVER,
+          inject: [options.contextResolver as Type<NestEntitlementsContextResolver>],
+          useFactory: (resolverInstance: NestEntitlementsContextResolver) => {
+            return (ctx: ExecutionContext) => resolverInstance.resolve(ctx);
+          }
+        }
+      : {
+          provide: ENTITLEMENTS_CONTEXT_RESOLVER,
+          useValue: options.contextResolver ?? defaultEntitlementsContextResolver
+        };
 
     const defaultPolicyProvider: Provider = {
       provide: ENTITLEMENTS_DEFAULT_POLICY,
@@ -118,6 +131,9 @@ export class EntitlementsModule {
       exposeErrorDetailsProvider,
       EntitlementsGuard
     ];
+    if (isResolverClass && options.contextResolver) {
+      providers.push(options.contextResolver as Type<NestEntitlementsContextResolver>);
+    }
     if (options.global !== false) {
       providers.push({ provide: APP_GUARD, useClass: EntitlementsGuard });
     }
