@@ -23,7 +23,10 @@ export {
   defaultEntitlementsContextResolver,
   unsafeHeaderBasedEntitlementsContextResolver
 } from './entitlements-context';
-export type { EntitlementsContextResolver } from './entitlements-context';
+export type {
+  EntitlementsContextResolver,
+  NestEntitlementsContextResolver
+} from './entitlements-context';
 
 export {
   ENTITLEMENTS,

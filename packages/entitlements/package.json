@@ -59,6 +59,16 @@
         "default": "./dist/nest/index.js"
       }
     },
+    "./nest/supabase": {
+      "import": {
+        "types": "./dist/nest/supabase/index.d.mts",
+        "default": "./dist/nest/supabase/index.mjs"
+      },
+      "require": {
+        "types": "./dist/nest/supabase/index.d.ts",
+        "default": "./dist/nest/supabase/index.js"
+      }
+    },
     "./adapters/persistence/memory": {
       "import": {
         "types": "./dist/adapters/persistence/memory.d.mts",
@@ -174,6 +184,8 @@
     "@types/react-dom": "^19.0.3",
     "@types/supertest": "^6.0.2",
     "@vitest/coverage-v8": "^4.1.6",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1",
     "express": "^5.0.1",
     "jsdom": "^25.0.1",
     "react": "^19.0.0",
