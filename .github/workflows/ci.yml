@@ -90,9 +90,14 @@ jobs:
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Publish to npm with provenance (OIDC)
+      - name: Publish to npm with provenance
         if: steps.check.outputs.skip == 'false'
         working-directory: packages/entitlements
-        run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "${{ secrets.NPM_TOKEN }}" ]; then
+            echo "No NPM_TOKEN secret found. Publishing tokenlessly via OIDC Trusted Publishing..."
+            npm publish --provenance --access public
+          else
+            echo "NPM_TOKEN secret found. Publishing via token..."
+            NODE_AUTH_TOKEN="${{ secrets.NPM_TOKEN }}" npm publish --provenance --access public
+          fi
