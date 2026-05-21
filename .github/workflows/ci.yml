@@ -46,6 +46,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
+          cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
       - name: Bump version + tag
         id: release_management
         uses: ./.github/actions/bump
@@ -59,3 +61,38 @@ jobs:
           body: ${{ steps.release_management.outputs.release_body }}
           generate_release_notes: false
           token: ${{ secrets.REPO_ACCESS_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Clean deprecated npm config
+        run: |
+          npm config delete always-auth --location=user 2>/dev/null || true
+          npm config delete always-auth --location=project 2>/dev/null || true
+          rm -f .npmrc
+
+      - name: Ensure npm has OIDC trusted publishing support
+        run: npm install -g npm@latest
+
+      - name: Install dependencies and build entitlements package
+        run: |
+          npm ci
+          npm run build -w @idevconn/isubscribe-entitlements
+
+      - name: Check if version is already on npm
+        id: check
+        working-directory: packages/entitlements
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VER=$(node -p "require('./package.json').version")
+          echo "Resolved $NAME@$VER"
+          if npm view "$NAME@$VER" version >/dev/null 2>&1; then
+            echo "Version already published. Skipping."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish to npm with provenance (OIDC)
+        if: steps.check.outputs.skip == 'false'
+        working-directory: packages/entitlements
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
