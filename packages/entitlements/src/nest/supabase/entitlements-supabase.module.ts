@@ -30,6 +30,8 @@ export interface EntitlementsSupabaseAsyncOptions {
       }>;
   contextResolver?: EntitlementsContextResolver | Type<NestEntitlementsContextResolver> | undefined;
   global?: boolean;
+  isGlobal?: boolean;
+  logger?: EntitlementsConfig['logger'];
   defaultPolicy?: 'allow' | 'deny';
   exposeErrorDetails?: boolean;
 }
@@ -50,8 +52,8 @@ export class EntitlementsSupabaseModule {
           useFactory: async (...args: unknown[]): Promise<EntitlementsConfig> => {
             const config = await options.useFactory(...args);
 
-            // Bridge Logger to NestJS standard logger
-            const nestLogger = {
+            // Bridge Logger to NestJS standard logger if no custom logger is provided
+            const nestLogger = options.logger ?? {
               debug: (_msg: string) => {
                 /* Keep debug silent */
               },
@@ -74,6 +76,7 @@ export class EntitlementsSupabaseModule {
           },
           contextResolver: options.contextResolver,
           global: options.global ?? false,
+          isGlobal: options.isGlobal ?? false,
           defaultPolicy: options.defaultPolicy ?? 'allow',
           exposeErrorDetails: options.exposeErrorDetails ?? true
         })
