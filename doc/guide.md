@@ -358,6 +358,56 @@ Replace with your own resolver if you need a different shape than `req.user`.
 See [`apps/example-nest-api`](../apps/example-nest-api) for the full
 reference implementation.
 
+### NestJS + Supabase shortcut: `EntitlementsSupabaseModule`
+
+If your persistence is Supabase, `EntitlementsSupabaseModule.registerAsync`
+collapses `createSupabaseAdapter` + `EntitlementsModule.forRootAsync` into one
+call:
+
+```ts
+// app.module.ts
+import { Module } from '@nestjs/common';
+import { EntitlementsSupabaseModule } from '@idevconn/entitlements/nest/supabase';
+import { SupabaseModule, SupabaseClient } from './supabase.module'; // your own provider
+import { PLANS, planResolver } from './plans';
+
+@Module({
+  imports: [
+    EntitlementsSupabaseModule.registerAsync({
+      imports: [SupabaseModule],
+      inject: [SupabaseClient],
+      useFactory: (client) => ({
+        client,
+        planResolver,
+        fallbackPlan: PLANS.free
+        // subscriptionsTable / usageTable default to 'user_subscriptions' / 'entitlements_usage'
+      }),
+      isGlobal: true // module visibility — export EntitlementsModule for other feature modules
+      // global: true // registers EntitlementsGuard as an APP_GUARD; defaults to FALSE here (see table below)
+    })
+  ]
+})
+export class AppModule {}
+```
+
+Prefer `EntitlementsSupabaseModule` over `EntitlementsModule.forRoot` + a
+manually-wired `createSupabaseAdapter` whenever Supabase is your persistence —
+it also defaults `cacheTtlMs: 0` (real-time-consistent reads) and bridges a
+NestJS-flavored logger for you. Use `EntitlementsModule.forRoot` directly for
+every other adapter (memory, Prisma, TypeORM) or if you need cache TTL tuning.
+
+`isGlobal` and `global` are two independent flags:
+
+| Option     | Default here                                                                             | Controls                                                                                                                                                                      |
+| ---------- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `isGlobal` | `false`                                                                                  | Whether the underlying `EntitlementsModule` is Nest-global (visible to every module without importing it).                                                                    |
+| `global`   | **`false`** — note this differs from `EntitlementsModule.forRoot`, which defaults `true` | Whether `EntitlementsGuard` is registered as an `APP_GUARD` (protects every route by default). Pass `true` explicitly if you want that behavior through the Supabase wrapper. |
+
+If you only inject `ENTITLEMENTS` in feature modules that don't import
+`EntitlementsModule`/`EntitlementsSupabaseModule` directly, set `isGlobal: true`
+— otherwise Nest's DI fails with `Nest can't resolve dependencies of
+YourService (?)`.
+
 ---
 
 ## 9. Quickstart — frontend (React)
