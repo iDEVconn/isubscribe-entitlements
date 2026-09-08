@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Dependencies
+
+- Bump `zod` 3.25.76 → 4.5.4 and `@casl/ability` 6.8.1 → 7.0.1 (major). No
+  code changes required — public API surfaces used (`AbilityBuilder`,
+  `createMongoAbility`, `z.record`/`ZodIssue`) are unchanged. Verified via
+  `tsc --noEmit` and the full unit/integration suite (99 tests).
+
 ### Breaking Changes
 
 - **NestJS:** `defaultEntitlementsContextResolver` no longer reads `x-user-id` /

@@ -167,8 +167,8 @@
     }
   },
   "dependencies": {
-    "@casl/ability": "^6.7.3",
-    "zod": "^3.24.1"
+    "@casl/ability": "^7.0.1",
+    "zod": "^4.5.4"
   },
   "devDependencies": {
     "@nestjs/common": "^11.0.6",
