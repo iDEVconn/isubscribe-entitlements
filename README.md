@@ -183,6 +183,25 @@ thin adapters on top of this same service.
 For the full step-by-step (Nest, React, raw Node, SSR, multi-tenant,
 configuration knobs) see [`doc/guide.md`](./doc/guide.md).
 
+### NestJS + Supabase — one call
+
+If your persistence is Supabase, skip wiring `createSupabaseAdapter` yourself:
+
+```ts
+import { EntitlementsSupabaseModule } from '@idevconn/entitlements/nest/supabase';
+
+EntitlementsSupabaseModule.registerAsync({
+  imports: [SupabaseModule],
+  inject: [SupabaseClient],
+  useFactory: (client) => ({ client, planResolver, fallbackPlan: PLANS.free }),
+  isGlobal: true
+});
+```
+
+See [`doc/guide.md §8`](./doc/guide.md#8-quickstart--backend-nestjs) for the
+full example and the `isGlobal`/`global` option semantics (the latter
+defaults differently here than on `EntitlementsModule.forRoot`).
+
 ---
 
 ## Main entry points
@@ -192,6 +211,7 @@ configuration knobs) see [`doc/guide.md`](./doc/guide.md).
 | `@idevconn/entitlements`                               | `createEntitlements`, `EntitlementsService`, all types and error classes                                                                                                                          |
 | `@idevconn/entitlements/react`                         | `<EntitlementsProvider>`, `<Feature>`, `<LockedFeature>`, `useSubscription`, `useFeature`, `useLimit`, `useUsage`                                                                                 |
 | `@idevconn/entitlements/nest`                          | `EntitlementsModule`, `@RequireSubscription`, `EntitlementsGuard`, `ConsumeOnSuccessInterceptor`, `defaultEntitlementsContextResolver`, `unsafeHeaderBasedEntitlementsContextResolver`, DI tokens |
+| `@idevconn/entitlements/nest/supabase`                 | `EntitlementsSupabaseModule` — `registerAsync` wraps `createSupabaseAdapter` + `EntitlementsModule.forRootAsync` in one call for Supabase-backed NestJS apps                                      |
 | `@idevconn/entitlements/adapters/persistence/memory`   | `createMemoryAdapter` — single-process, for tests/demos                                                                                                                                           |
 | `@idevconn/entitlements/adapters/persistence/prisma`   | `createPrismaAdapter` — atomic counters via `update increment`                                                                                                                                    |
 | `@idevconn/entitlements/adapters/persistence/supabase` | `createSupabaseAdapter` — atomic counters via Postgres RPC                                                                                                                                        |

@@ -236,6 +236,12 @@ $$ language sql;
 The adapter calls the RPC for atomic upsert+increment; everything else is
 plain `select`/`upsert`. RLS-friendly: filter by `user_id = auth.uid()`.
 
+For NestJS apps, `@idevconn/entitlements/nest/supabase`'s
+`EntitlementsSupabaseModule` wraps `createSupabaseAdapter` +
+`EntitlementsModule.forRootAsync` (persistence, adapter wiring, cache TTL,
+and NestJS logger bridging) behind one `registerAsync` call — see
+[`doc/guide.md §8`](./doc/guide.md#8-quickstart--backend-nestjs).
+
 ### 6.3 TypeORM
 
 Either provide your own entities (whose columns match the structural type in
